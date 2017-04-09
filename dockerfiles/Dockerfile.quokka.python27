@@ -1,0 +1,19 @@
+FROM python:2.7
+
+ENV PYTHONUNBUFFERED 1
+
+RUN apt-get update
+RUN apt-get install -y vim
+RUN pip install --upgrade pip
+#RUN apt-get install -y libtiff5-dev libjpeg8-dev zlib1g-dev libfreetype6-dev
+RUN apt-get install -y libtiff5-dev libjpeg62-turbo-dev zlib1g-dev libfreetype6-dev
+
+RUN mkdir /app
+RUN mkdir /app/newrelic
+WORKDIR /app
+
+ADD ./quokka /app
+
+RUN pip install -r requirements/requirements.txt
+RUN pip install uwsgi
+RUN pip install newrelic==2.50.0.39
