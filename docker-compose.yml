@@ -1,0 +1,49 @@
+version: '2'
+services:
+
+  mongodbhost_quokka:
+    image: mongo:3.3.5
+
+  # TODO: init quokka migrate and populate with default
+  # manage accounts_createsuperuser
+  # manage populate
+
+  quokka:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.quokka.python27
+    command: uwsgi --ini uwsgi.ini
+    volumes:
+      - ./quokka:/app
+      - ./docker/quokka/local_settings.py:/app/quokka/local_settings.py
+      - ./docker/quokka/uwsgi.ini:/app/uwsgi.ini
+      - ./config/newrelic.ini:/app/newrelic.ini
+    links:
+      - mongodbhost_quokka:mongodbhost
+    ports:
+      - "3000:3000"
+    security_opt:
+      - seccomp:unconfined
+
+  tcell_local_quokka:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.quokka.python27
+    command: sh -c "pip install --upgrade /tcellagent_src && uwsgi --ini uwsgi.ini"
+    volumes:
+      - ../pythonagent-tcell:/tcellagent_src
+      - ./quokka:/app
+      - ./docker/quokka/local_settings.py:/app/quokka/local_settings.py
+      - ./docker/quokka/uwsgi.ini:/app/uwsgi.ini
+      - ./docker/quokka/wsgi.py:/app/docker-wsgi.py
+      - ./config/newrelic.ini:/app/newrelic.ini
+      - ./config/tcell_agent.config:/app/tcell_agent.config
+    links:
+      - mongodbhost_quokka:mongodbhost
+    ports:
+      - "3000:3000"
+    environment:
+      - USE_TCELL=1
+      - USE_NEWRELIC=1
+    security_opt:
+      - seccomp:unconfined
