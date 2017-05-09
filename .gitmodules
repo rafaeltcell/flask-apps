@@ -1,3 +1,6 @@
 [submodule "quokka"]
 	path = quokka
 	url = https://github.com/quokkaproject/quokka.git
+[submodule "flask-by-example"]
+	path = flask-by-example
+	url = https://github.com/realpython/flask-by-example.git

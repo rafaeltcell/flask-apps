@@ -47,3 +47,52 @@ services:
       - USE_NEWRELIC=1
     security_opt:
       - seccomp:unconfined
+
+  postgreshost_fbe:
+    image: postgres:latest
+
+  init_postgreshost_fbe:
+    image: postgres
+    working_dir: /build
+    command: sh -c "psql -h postgreshost -p 5432 -d postgres -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'fbe'\" | grep -q 1 || psql -h postgreshost -p 5432 -U postgres -c \"CREATE DATABASE fbe\""
+    links:
+      - postgreshost_fbe:postgreshost
+
+  fbe:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.fbe.python35
+    command: sh -c "redis-server & python worker.py & python app.py"
+    volumes:
+      - ./flask-by-example:/app
+      - ./config/newrelic.ini:/app/newrelic.ini
+    links:
+      - postgreshost_fbe:postgreshost
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres@postgreshost/fbe
+      - APP_SETTINGS=config.DevelopmentConfig
+    security_opt:
+      - seccomp:unconfined
+
+  tcell_local_fbe:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.fbe.python35
+    command: sh -c "pip install --upgrade /tcellagent_src; redis-server & python worker.py & tcell_agent run python app.py"
+    volumes:
+      - ../pythonagent-tcell:/tcellagent_src
+      - ./flask-by-example:/app
+      - ./config/newrelic.ini:/app/newrelic.ini
+      - ./config/tcell_agent.config:/app/tcell_agent.config
+    links:
+      - postgreshost_fbe:postgreshost
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres@postgreshost/fbe
+      - APP_SETTINGS=config.DevelopmentConfig
+    security_opt:
+      - seccomp:unconfined
+

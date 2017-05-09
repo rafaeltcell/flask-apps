@@ -1,4 +1,4 @@
-FROM python:2.7
+FROM python:3.5
 
 ENV PYTHONUNBUFFERED 1
 
@@ -9,11 +9,14 @@ RUN apt-get install -y libtiff5-dev libjpeg62-turbo-dev zlib1g-dev libfreetype6-
 RUN apt-get install -y build-essential strace htop python-prctl libcap-dev
 RUN pip install python-prctl
 
+# Install Redis
+RUN apt-get install -qy redis-server
+
 RUN mkdir /app
 WORKDIR /app
 
-ADD ./quokka /app
+ADD ./flask-by-example /app
 
-RUN pip install -r requirements/requirements.txt
+RUN pip install -r requirements.txt
 RUN pip install newrelic==2.50.0.39
 RUN pip install uwsgi
